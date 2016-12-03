@@ -388,6 +388,107 @@ void testMouseClick()
 	}
 }
 
+
+void Cluster()
+{
+	Mat img = imread("Images/points2.bmp", IMREAD_GRAYSCALE);
+	Mat dst(500, 500, CV_8UC3);
+	int points[4000][3] = { 0 }, k = -1, centre[3] = { 0 }, min = 999999;
+	int mi = 0, mj = 0;
+	//get all points
+	for (int i = 0; i < img.rows; i++)
+		for (int j = 0; j < img.cols; j++)
+		{
+			if (img.at<uchar>(i, j) == 0)
+			{
+				//k is number of points
+				k++;
+				// 0 means x coord j
+				// 1 means y coord i
+				// 2 means the cluster number init 0
+				points[k][0] = j;
+				points[k][1] = i;
+				points[k][2] = 0;
+
+
+			}
+
+		}
+	centre[0] = rand() % k;
+	centre[1] = rand() % k;
+	centre[2] = rand() % k;
+	//centre[3] = rand() % k;
+
+	int plusPoints = 0;
+	//iterate through each cluster
+	bool changed = true;
+
+
+	for (int l = 1; l <= 20; l++)
+	{
+			for (int i = 0; i < k; i++)
+			{
+				min = 999999;
+				//check for every point the most appropriate cluster
+				for (int j = 0; j < 3; j++)
+				{   
+					//calcultate distance between center and point
+					int val = sqrt(pow(abs(points[i][0] - points[centre[j]][0]), 2) + pow(abs(points[i][1] - points[centre[j]][1]), 2));
+					if (val < min)
+					{
+
+						min = val;
+						points[i][2] = j;
+					}
+				}
+			}
+
+			// check the number of points of each cluster
+			for (int j = 0; j < 3; j++)
+			{
+				mi = 0;
+				mj = 0;
+				int nrp = 0;
+
+				for (int i = 0; i < k; i++)
+				{
+					//if point belongs to cluster j
+					if (points[i][2] == j)
+					{
+
+						// sum all x coord and all y and count points
+						mi += points[i][1];
+						nrp++;
+						mj += points[i][0];
+
+					}
+				}
+				if (mi / nrp != points[k + plusPoints][1] || mj / nrp != points[k + plusPoints][0]) changed = true;
+
+				plusPoints++;
+				points[k + plusPoints][1] = mi / nrp;
+				points[k + plusPoints][0] = mj / nrp;
+				centre[j] = k + plusPoints - 1;
+			}
+	
+	}
+
+
+	Vec3b colors[4];
+	for (int i = 0; i < 3; i++)
+		colors[i] = { (uchar)(rand() % 255), (uchar)(rand() % 255), (uchar)(rand() % 255) };
+
+	for (int i = 0; i < k; i++)
+	{
+		dst.at<Vec3b>(points[i][1], points[i][0]) = colors[points[i][2]];
+	}
+
+	imshow("DT", dst);
+	waitKey();
+}
+
+
+
 int main()
 {
 	int op;
@@ -405,6 +506,7 @@ int main()
 		printf(" 7 - Edges in a video sequence\n");
 		printf(" 8 - Snap frame from live video\n");
 		printf(" 9 - Mouse callback demo\n");
+		printf(" 10 - Clustering \n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -437,6 +539,9 @@ int main()
 				break;
 			case 9:
 				testMouseClick();
+				break;
+			case 10:
+				Cluster();
 				break;
 		}
 	}
