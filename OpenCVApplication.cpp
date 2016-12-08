@@ -388,6 +388,89 @@ void testMouseClick()
 	}
 }
 
+double lab4PatternRecognition(Mat imagine1, Mat imagine2);
+
+void createPedestriansTable(){
+	char fname[256];
+
+	Mat pictureVector[128];
+
+	double distanceTable[128][128];
+
+	for (int i = 1; i <= 128; i++){
+		sprintf(fname, "t%dzoom.bmp", i);
+		pictureVector[i] = imread(fname, 0);
+	}	for (int i = 0; i < 127; i++){
+		for (int j = i + 1; j < 128; j++){
+			distanceTable[i][j] = lab4PatternRecognition(pictureVector[i], pictureVector[j]);
+			distanceTable[j][i] = distanceTable[i][j];
+			printf("%f,", distanceTable[i][j]);
+		}
+		printf("\n");
+	}
+	waitKey();
+}
+
+Mat lab4TransformataDistanta(Mat imagine){
+
+	Mat destinatie = imagine.clone();
+
+	int masca[3][3] = { { 3, 2, 3 }, { 2, 0, 2 }, { 3, 2, 3 } };
+
+	for (int i = 1; i < imagine.rows - 1; i++){
+		for (int j = 1; j < imagine.cols - 1; j++){
+
+			int valoareMinima = 300;
+
+			for (int k = -1; k < 2; k++){
+				for (int t = -1; t < 2; t++){
+					if (destinatie.at<uchar>(i + k, j + t) + masca[k + 1][t + 1] < valoareMinima){
+						valoareMinima = destinatie.at<uchar>(i + k, j + t) + masca[k + 1][t + 1];
+					}
+				}
+			}
+			destinatie.at<uchar>(i, j) = valoareMinima;
+		}
+	}
+
+	for (int i = imagine.rows - 2; i > 0; i--){
+		for (int j = imagine.cols - 2; j > 0; j--){
+
+			int valoareMinima = destinatie.at<uchar>(i, j);
+			for (int k = -1; k < 2; k++){
+				for (int t = -1; t < 2; t++){
+					if (destinatie.at<uchar>(i + k, j + t) + masca[k + 1][t + 1] < valoareMinima){
+						valoareMinima = destinatie.at<uchar>(i + k, j + t) + masca[k + 1][t + 1];
+					}
+				}
+			}
+			destinatie.at<uchar>(i, j) = valoareMinima;
+		}
+	}
+
+	return destinatie;
+}
+
+double lab4PatternRecognition(Mat imagine1, Mat imagine2){
+
+	Mat imagineTransformata = lab4TransformataDistanta(imagine1);
+	Mat imagineSursa = imagine2;
+
+	int suma = 0;
+	int nrPuncteCoordonate = 0;
+	int media = 0;
+
+	for (int i = 0; i < imagineTransformata.rows - 1; i++){
+		for (int j = 0; j < imagineTransformata.cols - 1; j++){
+			if (imagineSursa.at<uchar>(i, j) == 0){
+				suma += imagineTransformata.at<uchar>(i, j) / 2;
+				nrPuncteCoordonate++;
+			}
+		}
+	}
+	return suma / nrPuncteCoordonate;
+}
+
 
 void Cluster()
 {
@@ -507,6 +590,7 @@ int main()
 		printf(" 8 - Snap frame from live video\n");
 		printf(" 9 - Mouse callback demo\n");
 		printf(" 10 - Clustering \n");
+		printf(" 11 - Pedestrian\n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -542,6 +626,9 @@ int main()
 				break;
 			case 10:
 				Cluster();
+				break;
+			case 11:
+				createPedestriansTable();
 				break;
 		}
 	}
