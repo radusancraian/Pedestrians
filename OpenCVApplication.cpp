@@ -389,27 +389,50 @@ void testMouseClick()
 }
 
 double lab4PatternRecognition(Mat imagine1, Mat imagine2);
+const int nrPictures = 34;
+double distanceTable[34][34];
 
 void createPedestriansTable(){
 	char fname[256];
 
-	Mat pictureVector[128];
+	Mat pictureVector[nrPictures];
 
 	double distanceTable[128][128];
-
-	for (int i = 1; i <= 128; i++){
-		sprintf(fname, "t%dzoom.bmp", i);
-		pictureVector[i] = imread(fname, 0);
-	}	for (int i = 0; i < 127; i++){
-		for (int j = i + 1; j < 128; j++){
-			distanceTable[i][j] = lab4PatternRecognition(pictureVector[i], pictureVector[j]);
-			distanceTable[j][i] = distanceTable[i][j];
-			printf("%f,", distanceTable[i][j]);
-		}
-		printf("\n");
+	FILE *f;
+	f = fopen("result.txt", "w+");
+	if (f == NULL)
+	{
+		printf("Error opening file!\n");
+		exit(1);
 	}
+
+	for (int i = 0; i <= 127; i++){
+		sprintf(fname, "Images/templates/t%dzoom.bmp", i+1);
+		pictureVector[i] = imread(fname, 0);
+	}
+
+	for (int i = 0; i < 127; i++){
+		for (int j = i + 1; j < 128; j++){
+			distanceTable[i][j] = float(lab4PatternRecognition(pictureVector[i], pictureVector[j]));
+			distanceTable[j][i] = distanceTable[i][j];
+			printf("%d %d %f\n", i, j, distanceTable[i][j]);
+			fprintf(f, "%d %d %f\n", i,j , distanceTable[i][j]);
+		}
+		fprintf(f, "\n");
+	}
+	fclose(f);
 	waitKey();
 }
+
+void PedestrianClustering()
+{
+	double centre[4] = { 0 };
+	centre[0] = distanceTable[rand() % 34][rand() % 34];
+	centre[1] = distanceTable[rand() % 34][rand() % 34];
+	centre[2] = distanceTable[rand() % 34][rand() % 34];
+	centre[3] = distanceTable[rand() % 34][rand() % 34];
+}
+
 
 Mat lab4TransformataDistanta(Mat imagine){
 
@@ -456,7 +479,7 @@ double lab4PatternRecognition(Mat imagine1, Mat imagine2){
 	Mat imagineTransformata = lab4TransformataDistanta(imagine1);
 	Mat imagineSursa = imagine2;
 
-	int suma = 0;
+	float suma = 0;
 	int nrPuncteCoordonate = 0;
 	int media = 0;
 
